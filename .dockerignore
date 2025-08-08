@@ -1,0 +1,43 @@
+# Speed up builds by excluding large/unnecessary files from the build context
+# Re-run docker build if you change this file
+
+# VCS and CI
+.git
+.gitignore
+.github/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+
+# Data/models/caches/logs (mounted at runtime via volumes)
+models/
+cache/
+logs/
+hf_cache/
+
+# Large artifacts
+*.pt
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+*.tar
+*.tar.gz
+*.whl
+
+# OS/IDE clutter
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

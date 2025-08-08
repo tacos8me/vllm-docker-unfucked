@@ -8,9 +8,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
 # Build optimization settings
-ENV MAX_JOBS=4
-ENV NVCC_THREADS=2
-ENV PIP_NO_CACHE_DIR=1
+ENV MAX_JOBS=24
+ENV NVCC_THREADS=12
+# Allow pip/uv to leverage cache between layers for faster rebuilds
+ENV PIP_NO_CACHE_DIR=0
 
 # CUDA environment for Blackwell
 ENV CUDA_HOME=/usr/local/cuda
@@ -47,20 +48,32 @@ RUN /root/.local/bin/uv venv /opt/vllm-env --python 3.12
 ENV VIRTUAL_ENV=/opt/vllm-env
 ENV PATH="/opt/vllm-env/bin:${PATH}"
 
-# Install PyTorch with CUDA 12.9 support
-RUN /root/.local/bin/uv pip install \
-    torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cu129
+# Install PyTorch (optionally pinned via build args; if unset, latest matching cu index is used)
+ARG TORCH_VERSION
+ARG TORCHVISION_VERSION
+ARG TORCHAUDIO_VERSION
+ARG TORCH_CUDA_INDEX_URL=https://download.pytorch.org/whl/cu129
+RUN bash -lc 'set -euo pipefail; \
+  TORCH_SPEC=${TORCH_VERSION:+torch==${TORCH_VERSION}}; TORCH_SPEC=${TORCH_SPEC:-torch}; \
+  VISION_SPEC=${TORCHVISION_VERSION:+torchvision==${TORCHVISION_VERSION}}; VISION_SPEC=${VISION_SPEC:-torchvision}; \
+  AUDIO_SPEC=${TORCHAUDIO_VERSION:+torchaudio==${TORCHAUDIO_VERSION}}; AUDIO_SPEC=${AUDIO_SPEC:-torchaudio}; \
+  /root/.local/bin/uv pip install "$TORCH_SPEC" "$VISION_SPEC" "$AUDIO_SPEC" --index-url ${TORCH_CUDA_INDEX_URL}'
 
-# Clone vLLM repository
+# Clone vLLM repository (shallow). If VLLM_REF is provided, checkout that ref; otherwise clone default branch
+ARG VLLM_REF
 WORKDIR /opt
-RUN git clone https://github.com/vllm-project/vllm.git
+RUN bash -lc 'set -euo pipefail; \
+  if [ -n "${VLLM_REF:-}" ]; then \
+    git clone --depth 1 --branch "${VLLM_REF}" https://github.com/vllm-project/vllm.git; \
+  else \
+    git clone --depth 1 https://github.com/vllm-project/vllm.git; \
+  fi'
 WORKDIR /opt/vllm
 
-# Build vLLM from source
+# Build vLLM from source (non-editable install for faster cold start and smaller runtime deps)
 RUN python use_existing_torch.py && \
     /root/.local/bin/uv pip install -r requirements/build.txt && \
-    /root/.local/bin/uv pip install -e . --no-build-isolation
+    /root/.local/bin/uv pip install . --no-build-isolation
 
 # Create models directory
 RUN mkdir -p /workspace/models
@@ -71,14 +84,20 @@ RUN python -c "import vllm, torch; print(f'✅ vLLM {vllm.__version__} with PyTo
 # Set working directory
 WORKDIR /opt/vllm
 
-# Expose API port
-EXPOSE 8080
+# Expose API and metrics ports
+EXPOSE 8080 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python -c "import vllm; import torch; assert torch.cuda.is_available()" || exit 1
 
+# Create non-root user and set permissions for mounted paths
+RUN useradd -m -u 10001 -s /bin/bash vllm && \
+    mkdir -p /workspace/models /opt/vllm/logs && \
+    chown -R vllm:vllm /workspace /opt/vllm /root/.cache || true
+
 # Default command - can be overridden in docker-compose
+USER vllm
 CMD ["python", "-m", "vllm.entrypoints.openai.api_server", \
      "--host", "0.0.0.0", \
      "--port", "8080", \

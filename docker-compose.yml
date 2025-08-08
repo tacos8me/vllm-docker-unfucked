@@ -1,46 +1,55 @@
-version: '3.8'
-
 services:
   vllm-server:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        TORCH_VERSION: ${TORCH_VERSION}
+        TORCHVISION_VERSION: ${TORCHVISION_VERSION}
+        TORCHAUDIO_VERSION: ${TORCHAUDIO_VERSION}
+        TORCH_CUDA_INDEX_URL: ${TORCH_CUDA_INDEX_URL}
+        VLLM_REF: ${VLLM_REF}
     image: vllm-blackwell:latest
     container_name: vllm-blackwell-server
     restart: unless-stopped
     
-    # GPU access for Blackwell
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # GPU access for docker-compose (non-Swarm) - widest compatibility
+    # Use legacy runtime flag plus NVIDIA_* envs; subset via CUDA_VISIBLE_DEVICES
+    runtime: nvidia
     
     # Port mapping
     ports:
       - "${VLLM_PORT:-8080}:8080"
+      - "${METRICS_PORT:-8081}:8081"
     
     # Volume mounts
     volumes:
       - "${MODELS_PATH:-./models}:/workspace/models:ro"
       - "${CACHE_PATH:-./cache}:/root/.cache:rw"
       - "${LOGS_PATH:-./logs}:/opt/vllm/logs:rw"
+      - "${HF_CACHE_PATH:-./hf_cache}:/root/.cache/huggingface:rw"
     
     # Environment variables
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+      - NVIDIA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+      - NVIDIA_DRIVER_CAPABILITIES=all
       - VLLM_FLASH_ATTN_VERSION=2
       - TORCH_CUDA_ARCH_LIST=9.0;10.0;12.0+PTX
       - PYTHONUNBUFFERED=1
       - VLLM_LOGGING_LEVEL=${VLLM_LOGGING_LEVEL:-INFO}
+      - HF_HOME=/root/.cache/huggingface
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OMP_NUM_THREADS=${OMP_NUM_THREADS:-8}
+      - MKL_NUM_THREADS=${MKL_NUM_THREADS:-8}
+      - CUDA_DEVICE_MAX_CONNECTIONS=1
+      - NCCL_DEBUG=${NCCL_DEBUG:-WARN}
+      - NCCL_IB_DISABLE=${NCCL_IB_DISABLE:-1}
     
     # Shared memory for multi-GPU setups
     shm_size: ${SHM_SIZE:-16g}
     
-    # IPC mode for GPU communication
-    ipc: host
     
     # Resource limits (optional)
     mem_limit: ${MEM_LIMIT:-64g}
@@ -57,6 +66,7 @@ services:
     command: >
       python -m vllm.entrypoints.openai.api_server
       --model ${MODEL_NAME:-/workspace/models}
+      --served-model-name ${SERVED_MODEL_NAME:-${MODEL_NAME:-/workspace/models}}
       --host 0.0.0.0
       --port 8080
       --tensor-parallel-size ${TENSOR_PARALLEL_SIZE:-1}
@@ -64,6 +74,7 @@ services:
       --max-num-seqs ${MAX_NUM_SEQS:-256}
       --gpu-memory-utilization ${GPU_MEMORY_UTIL:-0.95}
       --dtype ${DTYPE:-auto}
+      --metrics-port ${METRICS_PORT:-8081} --prometheus-metrics
       --trust-remote-code
       ${ADDITIONAL_ARGS:-}
 
