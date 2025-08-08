@@ -1,52 +1,51 @@
-# vLLM Blackwell Docker Setup
+# vLLM Docker Unfucked 🌮
 
-Automated Docker Compose setup for running vLLM on NVIDIA Blackwell GPUs (RTX 5080/5090, B100/B200).
+**Because setting up vLLM shouldn't make you want to throw your GPU out the window.**
 
-## 🚀 Quick Start
+This repo provides a working Docker Compose setup for vLLM that actually works with modern NVIDIA GPUs, especially Blackwell (RTX 5080/5090, B100/B200). No more CUDA version hell, no more mysterious build failures, no more "why the fuck doesn't this work" moments.
+
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![NVIDIA](https://img.shields.io/badge/NVIDIA-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
+[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
+
+## 🚀 Quick Start (The Actually Quick Way)
 
 ### Prerequisites
 - Docker with NVIDIA Container Runtime
-- NVIDIA Driver R570+ (for CUDA 12.8+ support)
-- NVIDIA Blackwell GPU (RTX 5080/5090, B100/B200)
+- NVIDIA Driver R570+ (for CUDA 12.8+ support)  
+- Any modern NVIDIA GPU (optimized for Blackwell but works with others)
+- Basic sanity (optional)
 
-### 1. Setup Files
-Create these four files in your project directory:
-
+### 1. Clone This Repo
 ```bash
-# Create project directory
-mkdir vllm-blackwell && cd vllm-blackwell
-
-# Create the files (download from artifacts)
-# - Dockerfile
-# - docker-compose.yml
-# - .env
-# - README.md (this file)
+git clone https://github.com/tacos8me/vllm-docker-unfucked.git
+cd vllm-docker-unfucked
 ```
 
-### 2. Configure Environment
-Edit `.env` file with your specific settings:
+### 2. Configure Your Shit
+Edit `.env` file with your actual paths (don't just copy-paste like a noob):
 
 ```bash
-# Essential settings to modify:
-MODELS_PATH=/your/models/path
-MODEL_NAME=your-model-name
-VLLM_PORT=8080
-TENSOR_PARALLEL_SIZE=1  # Number of GPUs
+# CHANGE THESE OR IT WON'T WORK:
+MODELS_PATH=/your/actual/models/path  # Where your models live
+MODEL_NAME=microsoft/DialoGPT-medium  # What model to serve
+VLLM_PORT=8080                        # Port to expose
+TENSOR_PARALLEL_SIZE=1                # Number of GPUs (1 unless you're rich)
 ```
 
-### 3. Build and Start
+### 3. Build and Start (The Moment of Truth)
 ```bash
-# Build the image (takes 5-10 minutes)
+# Build the image (takes 5-10 minutes, grab some coffee)
 docker-compose build
 
-# Start the service
+# Start the magic
 docker-compose up -d
 
-# Check logs
+# Watch it work (or fail spectacularly)
 docker-compose logs -f vllm-server
 ```
 
-### 4. Test the API
+### 4. Test That It Actually Works
 ```bash
 # Health check
 curl http://localhost:8080/health
@@ -61,7 +60,37 @@ curl http://localhost:8080/v1/chat/completions \
   }'
 ```
 
-## ⚙️ Configuration Options
+## 🔥 What This Unfucks
+
+### The Usual vLLM Docker Pain Points:
+- ❌ **"CUDA error: no kernel image available"** - Because someone thought sm_120 wasn't important
+- ❌ **Flash Attention version hell** - FA3 doesn't work with Blackwell, but who reads docs?
+- ❌ **PyTorch/CUDA version mismatches** - It's like dependency hell but with more crying
+- ❌ **Manual container management** - Typing the same docker run command 47 times
+- ❌ **"Works on my machine"** - But your machine is from 2019
+
+### What We Actually Fixed:
+- ✅ **Proper Blackwell support** - sm_120 compute capability baked in
+- ✅ **Flash Attention 2** - Because FA3 is still broken for Blackwell
+- ✅ **CUDA 12.9 + PyTorch compatibility** - They actually talk to each other
+- ✅ **Automated everything** - Docker Compose handles the bullshit
+- ✅ **Multi-GPU ready** - Just change one number in .env
+- ✅ **Production ready** - Health checks, logging, monitoring (optional)
+
+## 💻 Supported Hardware
+
+### Definitely Works:
+- **NVIDIA RTX 5090/5080** (Blackwell) - This is what we optimized for
+- **NVIDIA B100/B200** (Blackwell Data Center) - If you're that rich
+- **NVIDIA RTX 4090/4080** (Ada Lovelace) - Still fast AF
+- **NVIDIA H100/H200** (Hopper) - Data center flex
+
+### Probably Works:
+- Most RTX 30 series and above
+- Tesla/Quadro cards with compute capability 7.0+
+- Anything that doesn't make your electricity bill cry
+
+## ⚙️ Configuration Options (The Good Stuff)
 
 ### Model Configuration
 ```bash
@@ -148,154 +177,164 @@ open http://localhost:9090  # Prometheus
 open http://localhost:3000  # Grafana (admin/admin123)
 ```
 
-## 🐛 Troubleshooting
+## 🐛 Troubleshooting (When Shit Breaks)
 
-### Common Issues
-
-**GPU Not Detected:**
+### "GPU Not Detected" (Classic)
 ```bash
-# Check NVIDIA runtime
+# Check if NVIDIA runtime is actually working
 docker run --rm --gpus all nvidia/cuda:12.9-base nvidia-smi
 
-# Verify driver
-nvidia-smi
+# If that fails, your Docker setup is fucked
+# Fix: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
 ```
 
-**Memory Issues:**
+### "Out of Memory" (Buy More VRAM)
 ```bash
-# Reduce GPU memory usage
+# Reduce GPU memory usage (in .env)
 GPU_MEMORY_UTIL=0.8
 
-# Increase shared memory
+# Or increase shared memory if multi-GPU
 SHM_SIZE=32g
 ```
 
-**Build Failures:**
+### "Build Failed" (Murphy's Law)
 ```bash
-# Clean build
-docker-compose build --no-cache --pull
+# Nuclear option - clean everything
+docker-compose down --rmi all --volumes
+docker system prune -a
 
-# Check CUDA availability during build
-docker-compose exec vllm-server nvcc --version
+# Try again with more logging
+docker-compose build --no-cache --progress=plain
 ```
 
-**Flash Attention Errors:**
+### "Flash Attention Errors" (Because Nothing Is Easy)
 ```bash
-# Force Flash Attention 2
+# Force Flash Attention 2 (add to .env)
 VLLM_FLASH_ATTN_VERSION=2
+
+# Or disable Flash Attention entirely (slower but works)
+ADDITIONAL_ARGS=--disable-flash-attn
 ```
 
-### Debugging Commands
+### Debugging Commands (For When You're Really Stuck)
 ```bash
-# Check container status
+# Check if the container is actually running
 docker-compose ps
 
-# View detailed logs
-docker-compose logs --details vllm-server
+# See what the hell is happening
+docker-compose logs --follow --tail=100 vllm-server
 
-# Test PyTorch CUDA
+# Get inside the container (for advanced debugging)
+docker-compose exec vllm-server bash
+
+# Test PyTorch CUDA inside container
 docker-compose exec vllm-server python -c "
 import torch
-print(f'CUDA: {torch.cuda.is_available()}')
-print(f'GPU: {torch.cuda.get_device_name(0)}')
-print(f'Compute: {torch.cuda.get_device_capability(0)}')
-"
-
-# Test vLLM installation
-docker-compose exec vllm-server python -c "
-import vllm
-print(f'vLLM version: {vllm.__version__}')
+print(f'CUDA Available: {torch.cuda.is_available()}')
+print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')
+print(f'Compute Capability: {torch.cuda.get_device_capability(0) if torch.cuda.is_available() else \"None\"}')
 "
 ```
 
-## 🔧 Advanced Usage
+## 🚀 Production Tips (For The Pros)
 
-### Custom Model Loading
-```python
-# Python client example
-import requests
-
-response = requests.post('http://localhost:8080/v1/chat/completions', 
-    json={
-        "model": "your-model",
-        "messages": [{"role": "user", "content": "Explain quantum computing"}],
-        "max_tokens": 200,
-        "temperature": 0.7
-    })
-
-print(response.json())
-```
-
-### Batch Processing
+### Memory Optimization
 ```bash
-# Use vLLM CLI for batch inference
-docker-compose exec vllm-server python -m vllm.entrypoints.llm \
-  --model /workspace/models/your-model \
-  --input-file /workspace/inputs.txt \
-  --output-file /workspace/outputs.txt
+# Use bfloat16 for Blackwell GPUs (faster + less memory)
+DTYPE=bfloat16
+
+# Max out GPU memory utilization
+GPU_MEMORY_UTIL=0.98
 ```
 
-### Load Balancing
-For production, use multiple instances:
+### Multi-GPU Setup (Show Off Mode)
+```bash
+# Use all your GPUs
+TENSOR_PARALLEL_SIZE=4
+CUDA_VISIBLE_DEVICES=0,1,2,3
 
-```yaml
-# docker-compose.override.yml
-services:
-  vllm-server-1:
-    extends: vllm-server
-    container_name: vllm-server-1
-    ports: ["8081:8080"]
-    
-  vllm-server-2:
-    extends: vllm-server
-    container_name: vllm-server-2
-    ports: ["8082:8080"]
+# Increase shared memory for multi-GPU communication
+SHM_SIZE=64g
 ```
 
-## 📈 Performance Tips
+### High Throughput Setup
+```bash
+# More parallel sequences = higher throughput
+MAX_NUM_SEQS=512
 
-1. **Memory Optimization:**
-   - Use `bfloat16` for Blackwell GPUs
-   - Set `GPU_MEMORY_UTIL=0.95` for maximum utilization
+# Longer sequences for complex tasks
+MAX_MODEL_LEN=8192
+```
 
-2. **Multi-GPU:**
-   - Set `TENSOR_PARALLEL_SIZE` to number of GPUs
-   - Use `ipc: host` for fast inter-GPU communication
+## 📊 Monitoring (Optional Nerd Stuff)
 
-3. **Batch Processing:**
-   - Increase `MAX_NUM_SEQS` for higher throughput
-   - Adjust `MAX_MODEL_LEN` based on your use case
+Want fancy dashboards? Uncomment the monitoring services in `docker-compose.yml`:
 
-4. **Blackwell Optimization:**
-   - Ensure `TORCH_CUDA_ARCH_LIST` includes `12.0+PTX`
-   - Use `VLLM_FLASH_ATTN_VERSION=2` for stability
+```bash
+# Start everything including monitoring
+docker-compose up -d
 
-## 📝 Example Use Cases
+# Access the goods
+open http://localhost:9090  # Prometheus metrics
+open http://localhost:3000  # Grafana dashboards (admin/admin123)
+```
 
-### Chat Service
+## 🤝 Contributing
+
+Found a bug? Setup doesn't work? Have a better way to do something?
+
+1. **Open an issue** - Tell us what's broken
+2. **Submit a PR** - Fix it yourself (we love you)
+3. **Share feedback** - What worked, what didn't
+
+## 📝 Example Model Configs
+
+### For Chat/Conversation
 ```bash
 MODEL_NAME=microsoft/DialoGPT-medium
 MAX_MODEL_LEN=2048
 MAX_NUM_SEQS=128
+DTYPE=bfloat16
 ```
 
-### Code Generation
+### For Code Generation  
 ```bash
 MODEL_NAME=codellama/CodeLlama-7b-Python-hf
 MAX_MODEL_LEN=4096
 TEMPERATURE=0.1
+DTYPE=bfloat16
 ```
 
-### Large Models
+### For Large Models (RTX 4090+ Recommended)
 ```bash
 MODEL_NAME=meta-llama/Llama-2-70b-chat-hf
-TENSOR_PARALLEL_SIZE=4
-SHM_SIZE=64g
-MEM_LIMIT=256g
+TENSOR_PARALLEL_SIZE=2
+SHM_SIZE=32g
+MEM_LIMIT=128g
+DTYPE=bfloat16
 ```
+
+## ⚠️ Known Issues
+
+- **Flash Attention 3**: Doesn't work with Blackwell yet (use FA2)
+- **Some quantized models**: May need specific ADDITIONAL_ARGS
+- **Very old GPUs**: Compute capability < 7.0 not supported
+- **WSL2**: Works but can be flaky with GPU passthrough
+
+## 🎯 Why This Exists
+
+Because the official vLLM Docker setup is a maze of conflicting documentation, version incompatibilities, and "works on the maintainer's machine" syndrome. This repo provides a working setup that actual humans can use without a PhD in DevOps.
+
+**TL;DR**: We did the painful setup work so you don't have to. You're welcome.
 
 ---
 
-🎉 **You're ready to run vLLM on Blackwell GPUs!** 
+## 📜 License
 
-For more advanced configuration, see the [vLLM documentation](https://docs.vllm.ai/).
+MIT License - Do whatever you want with this code. If it breaks your system, that's on you. 🤷‍♂️
+
+---
+
+**Made with ☕ and spite by people tired of Docker setup hell.**
+
+🌮 **Star this repo if it saved you from throwing your computer out the window.**
