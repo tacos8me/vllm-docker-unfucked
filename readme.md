@@ -28,7 +28,7 @@ Edit `.env` file with your actual paths (don't just copy-paste like a noob):
 ```bash
 # CHANGE THESE OR IT WON'T WORK:
 MODELS_PATH=/your/actual/models/path  # Where your models live
-MODEL_NAME=microsoft/DialoGPT-medium  # What model to serve
+MODEL_NAME=zai-org/GLM-4.5-Air  # What model to serve
 VLLM_PORT=8080                        # Port to expose
 TENSOR_PARALLEL_SIZE=1                # Number of GPUs (1 unless you're rich)
 ```
@@ -81,7 +81,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 ### Definitely Works:
 - **NVIDIA RTX 5090/6000 Pro** (Blackwell) - This is what we optimized for
-- **NVIDIA B100/B200** (Blackwell Data Center) - If you're that rich
+- **NVIDIA B100/B200** (Blackwell Data Center) - Should have this figured out already, but yes
 - **NVIDIA RTX 4090/4080** (Ada Lovelace) - Still fast AF
 - **NVIDIA H100/H200** (Hopper) - Data center flex
 
