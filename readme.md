@@ -80,7 +80,7 @@ curl http://localhost:8080/v1/chat/completions \
 ## 💻 Supported Hardware
 
 ### Definitely Works:
-- **NVIDIA RTX 5090/5080** (Blackwell) - This is what we optimized for
+- **NVIDIA RTX 5090/6000 Pro** (Blackwell) - This is what we optimized for
 - **NVIDIA B100/B200** (Blackwell Data Center) - If you're that rich
 - **NVIDIA RTX 4090/4080** (Ada Lovelace) - Still fast AF
 - **NVIDIA H100/H200** (Hopper) - Data center flex
