@@ -22,13 +22,13 @@ MODEL_NAME=microsoft/DialoGPT-medium
 TENSOR_PARALLEL_SIZE=1
 
 # Maximum model sequence length
-MAX_MODEL_LEN=4096
+MAX_MODEL_LEN=2048
 
 # Maximum number of sequences to process in parallel
-MAX_NUM_SEQS=256
+MAX_NUM_SEQS=2048
 
 # GPU memory utilization (0.0 to 1.0)
-GPU_MEMORY_UTIL=0.95
+GPU_MEMORY_UTIL=0.90
 
 # Data type for model weights (auto, float16, bfloat16)
 DTYPE=auto
