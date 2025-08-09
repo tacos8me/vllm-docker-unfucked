@@ -82,7 +82,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 12,
         "x": 0,
         "y": 0
@@ -190,7 +190,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 0
@@ -271,10 +271,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
         "x": 0,
-        "y": 8
+        "y": 6
       },
       "id": 3,
       "options": {
@@ -297,14 +297,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm:gpu_cache_usage_perc{gpu=\"0\"} * vllm:gpu_memory_total{gpu=\"0\"} / 100",
+          "expr": "process_resident_memory_bytes / 1024 / 1024 / 1024",
           "instant": false,
-          "legendFormat": "GPU 0 Memory Used",
+          "legendFormat": "System Memory (GB)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GPU 0 Memory Usage (GB)",
+      "title": "System Memory (GB)",
       "type": "gauge"
     },
     {
@@ -335,15 +335,15 @@
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
         "x": 6,
-        "y": 8
+        "y": 6
       },
       "id": 8,
       "options": {
@@ -366,14 +366,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm:gpu_cache_usage_perc{gpu=\"1\"} * vllm:gpu_memory_total{gpu=\"1\"} / 100",
+          "expr": "rate(http_requests_total[5m]) * 60",
           "instant": false,
-          "legendFormat": "GPU 1 Memory Used",
+          "legendFormat": "Requests/min",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GPU 1 Memory Usage (GB)",
+      "title": "Request Rate (per min)",
       "type": "gauge"
     },
     {
@@ -409,10 +409,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
-        "x": 12,
-        "y": 8
+        "x": 18,
+        "y": 6
       },
       "id": 4,
       "options": {
