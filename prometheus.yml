@@ -15,7 +15,7 @@ scrape_configs:
   # vLLM metrics scraping
   - job_name: 'vllm-server'
     static_configs:
-      - targets: ['vllm-server:8081']
+      - targets: ['vllm-server:8080']
     scrape_interval: 5s
     metrics_path: /metrics
     scheme: http
