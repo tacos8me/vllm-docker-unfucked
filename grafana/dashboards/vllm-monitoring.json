@@ -82,7 +82,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 0
@@ -190,7 +190,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 12,
         "y": 0
@@ -257,24 +257,20 @@
                 "value": null
               },
               {
-                "color": "yellow",
-                "value": 20
-              },
-              {
                 "color": "red",
-                "value": 40
+                "value": 80
               }
             ]
           },
-          "unit": "decbytes"
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 3,
       "options": {
@@ -299,81 +295,12 @@
           "editorMode": "code",
           "expr": "process_resident_memory_bytes / 1024 / 1024 / 1024",
           "instant": false,
-          "legendFormat": "System Memory (GB)",
+          "legendFormat": "Memory Usage (GB)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "System Memory (GB)",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 20
-              },
-              {
-                "color": "red",
-                "value": 40
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 6
-      },
-      "id": 8,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "rate(http_requests_total[5m]) * 60",
-          "instant": false,
-          "legendFormat": "Requests/min",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Request Rate (per min)",
+      "title": "Memory Usage (GB)",
       "type": "gauge"
     },
     {
@@ -409,10 +336,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 6,
-        "x": 18,
-        "y": 6
+        "x": 6,
+        "y": 8
       },
       "id": 4,
       "options": {

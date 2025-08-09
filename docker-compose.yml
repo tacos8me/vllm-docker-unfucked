@@ -81,7 +81,6 @@ services:
       --gpu-memory-utilization ${GPU_MEMORY_UTIL:-0.95}
       --dtype ${DTYPE:-auto}
       --trust-remote-code
-      --disable-log-stats
       ${ADDITIONAL_ARGS:-}
     
     networks:
