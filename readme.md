@@ -23,11 +23,11 @@ cd vllm-docker-unfucked
 ```
 
 ### 2. Configure Your Shit
-Edit `.env` file with your actual paths (don't just copy-paste like a noob):
+Edit `.env` file with your actual paths (don't just copy-paste like an idiot):
 
 ```bash
 # CHANGE THESE OR IT WON'T WORK:
-MODELS_PATH=/your/actual/models/path  # Where your models live
+MODELS_PATH=/actual/models/path      # Where your models live. hf-cli sucks, BYOM
 MODEL_NAME=glm-air                   # Local model name or HF model ID
 SERVED_MODEL_NAME=oai/glm            # OpenAI-compatible model name
 VLLM_PORT=8080                       # Port to expose
