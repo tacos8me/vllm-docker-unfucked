@@ -15,3 +15,9 @@ datasources:
       httpMethod: GET
       queryTimeout: 60s
       timeInterval: 15s
+      keepCookies: []
+      manageAlerts: true
+      alertmanagerUid: ""
+      exemplarTraceIdDestinations: []
+    secureJsonFields: {}
+    withCredentials: false
