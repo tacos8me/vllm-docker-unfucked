@@ -27,7 +27,6 @@ services:
     # Port mapping
     ports:
       - "${VLLM_PORT:-8080}:8080"
-      - "${METRICS_PORT:-8081}:8081"
     
     # Volume mounts
     volumes:
@@ -81,7 +80,6 @@ services:
       --max-num-seqs ${MAX_NUM_SEQS:-256}
       --gpu-memory-utilization ${GPU_MEMORY_UTIL:-0.95}
       --dtype ${DTYPE:-auto}
-      --metrics-port ${METRICS_PORT:-8081} --prometheus-metrics
       --trust-remote-code
       ${ADDITIONAL_ARGS:-}
     
