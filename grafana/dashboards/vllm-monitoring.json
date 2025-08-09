@@ -257,12 +257,16 @@
                 "value": null
               },
               {
+                "color": "yellow",
+                "value": 20
+              },
+              {
                 "color": "red",
-                "value": 80
+                "value": 40
               }
             ]
           },
-          "unit": "percent"
+          "unit": "decbytes"
         },
         "overrides": []
       },
@@ -293,14 +297,83 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "process_resident_memory_bytes / 1024 / 1024 / 1024",
+          "expr": "vllm:gpu_cache_usage_perc{gpu=\"0\"} * vllm:gpu_memory_total{gpu=\"0\"} / 100",
           "instant": false,
-          "legendFormat": "Memory Usage (GB)",
+          "legendFormat": "GPU 0 Memory Used",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Memory Usage (GB)",
+      "title": "GPU 0 Memory Usage (GB)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 40
+              }
+            ]
+          },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "vllm:gpu_cache_usage_perc{gpu=\"1\"} * vllm:gpu_memory_total{gpu=\"1\"} / 100",
+          "instant": false,
+          "legendFormat": "GPU 1 Memory Used",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "GPU 1 Memory Usage (GB)",
       "type": "gauge"
     },
     {
@@ -338,7 +411,7 @@
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 6,
+        "x": 12,
         "y": 8
       },
       "id": 4,

@@ -93,9 +93,9 @@ open http://localhost:8081/metrics  # vLLM metrics
 
 ### Definitely Works:
 - **NVIDIA RTX 5090/6000 Pro** (Blackwell) - This is what we optimized for
-- **NVIDIA B100/B200** (Blackwell Data Center) - Should have this figured out already, but yes
-- **NVIDIA RTX 4090/4080** (Ada Lovelace) - Still fast AF
-- **NVIDIA H100/H200** (Hopper) - Data center flex
+- **NVIDIA B100/B200** (Blackwell Data Center) - You should have this figured out already. But yes
+- **NVIDIA RTX 4090/4080** (Ada Lovelace) - Yut
+- **NVIDIA H100/H200** (Hopper) - Sure
 
 ### Probably Works:
 - Most RTX 30 series and above
