@@ -9,6 +9,8 @@ services:
         TORCHAUDIO_VERSION: ${TORCHAUDIO_VERSION}
         TORCH_CUDA_INDEX_URL: ${TORCH_CUDA_INDEX_URL}
         VLLM_REF: ${VLLM_REF}
+        MAX_JOBS: ${MAX_JOBS}
+        NVCC_THREADS: ${NVCC_THREADS}
     image: vllm-blackwell:latest
     container_name: vllm-blackwell-server
     restart: unless-stopped
@@ -77,35 +79,55 @@ services:
       --metrics-port ${METRICS_PORT:-8081} --prometheus-metrics
       --trust-remote-code
       ${ADDITIONAL_ARGS:-}
+    
+    networks:
+      - vllm-network
 
-  # Optional: Monitoring with Prometheus (uncomment if needed)
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: vllm-prometheus
-  #   ports:
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-  #   command:
-  #     - '--config.file=/etc/prometheus/prometheus.yml'
-  #     - '--storage.tsdb.path=/prometheus'
-  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
-  #     - '--web.console.templates=/etc/prometheus/consoles'
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: vllm-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - vllm-network
 
-  # Optional: Grafana dashboard (uncomment if needed)
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: vllm-grafana
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
-  #   volumes:
-  #     - grafana-storage:/var/lib/grafana
+  # Grafana dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: vllm-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - vllm-network
 
-# Optional: Named volumes for persistence
+# Named volumes for persistence
 volumes:
   grafana-storage:
+    driver: local
+  prometheus-data:
     driver: local
 
 # Optional: Custom network

@@ -7,9 +7,11 @@ FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
-# Build optimization settings
-ENV MAX_JOBS=24
-ENV NVCC_THREADS=12
+# Build optimization settings (configurable via build args)
+ARG MAX_JOBS=32
+ARG NVCC_THREADS=16
+ENV MAX_JOBS=${MAX_JOBS}
+ENV NVCC_THREADS=${NVCC_THREADS}
 # Allow pip/uv to leverage cache between layers for faster rebuilds
 ENV PIP_NO_CACHE_DIR=0
 
