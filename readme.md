@@ -39,7 +39,7 @@ GPU_MEMORY_UTIL=0.95                 # Use 95% of GPU memory
 
 ### 3. Build and Start (The Moment of Truth)
 ```bash
-# Build the image (takes 5-10 minutes, grab some coffee)
+# Build the image (takes a LONG TIME, find something else to do)
 docker-compose build
 
 # Start the magic
