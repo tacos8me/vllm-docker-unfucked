@@ -112,6 +112,10 @@ MODEL_NAME=/workspace/models/llama-2-7b-chat
 # HuggingFace model (auto-downloaded)
 MODEL_NAME=microsoft/DialoGPT-medium
 MODEL_NAME=meta-llama/Llama-2-7b-chat-hf
+
+# Chat template content format (how messages are formatted internally)
+# vLLM auto-detects this, but you can override if needed
+CHAT_TEMPLATE_CONTENT_FORMAT=openai    # "openai" or "string"
 ```
 
 ### Multi-GPU Setup
@@ -340,6 +344,263 @@ METRICS_PORT=8081
 # Grafana admin password
 GRAFANA_PASSWORD=admin123
 ```
+
+## 💬 Chat Templates & Message Formatting
+
+vLLM requires models to include a chat template in their tokenizer configuration for chat/conversation support. This is a Jinja2 template that defines how roles, messages, and chat tokens are encoded.
+
+### Chat Template Content Format
+
+vLLM automatically detects how your model expects message content to be formatted, but you can override this behavior:
+
+```bash
+# Auto-detection (recommended - vLLM will log the detected format)
+CHAT_TEMPLATE_CONTENT_FORMAT=auto
+
+# Force OpenAI-style format: [{"type": "text", "text": "Hello world!"}]
+CHAT_TEMPLATE_CONTENT_FORMAT=openai
+
+# Force simple string format: "Hello world"
+CHAT_TEMPLATE_CONTENT_FORMAT=string
+```
+
+### When You Need Custom Chat Templates
+
+Some instruction/chat fine-tuned models don't include a chat template. For these models, you can specify a custom template:
+
+```bash
+# Option 1: Point to a custom chat template file
+ADDITIONAL_ARGS=--chat-template ./path/to/custom-template.jinja
+
+# Option 2: Inline template string (for simple cases)
+ADDITIONAL_ARGS=--chat-template "{% for message in messages %}{{ message.role }}: {{ message.content }}{% endfor %}"
+```
+
+### Popular Model Examples
+
+```bash
+# Most Llama-based chat models (auto-detected)
+MODEL_NAME=meta-llama/Llama-2-7b-chat-hf
+CHAT_TEMPLATE_CONTENT_FORMAT=string
+
+# Newer models like Llama-Guard (expect OpenAI format)
+MODEL_NAME=meta-llama/Llama-Guard-3-1B
+CHAT_TEMPLATE_CONTENT_FORMAT=openai
+
+# GLM models (typically work with OpenAI format)
+MODEL_NAME=glm-air
+CHAT_TEMPLATE_CONTENT_FORMAT=openai
+```
+
+### Troubleshooting Chat Templates
+
+If chat requests are failing:
+
+1. **Check the logs** - vLLM will log "Detected the chat template content format to be..."
+2. **Try different formats** - Switch between `openai` and `string`
+3. **Verify model compatibility** - Not all models support chat mode
+4. **Custom template** - Some models need manual chat template specification
+
+```bash
+# Debug chat template issues
+docker-compose logs vllm-server | grep -i "chat template"
+
+# Test with curl
+curl http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "your-served-model-name",
+    "messages": [{"role": "user", "content": "Test message"}],
+    "max_tokens": 50
+  }'
+```
+
+## 🛠️ Tool Calling & Function Support
+
+vLLM supports OpenAI-compatible tool calling (function calling) with both automatic tool choice and named function calling. This allows models to intelligently use external tools and APIs.
+
+### Quick Setup
+
+Enable tool calling in your `.env` file:
+
+```bash
+# Enable automatic tool choice (model decides when to use tools)
+ENABLE_AUTO_TOOL_CHOICE=true
+
+# Choose parser based on your model (see supported models below)
+TOOL_CALL_PARSER=llama3_json          # For Llama 3.1 models
+# TOOL_CALL_PARSER=hermes             # For Hermes models  
+# TOOL_CALL_PARSER=mistral            # For Mistral models
+
+# Optional: Custom chat template for tool calling
+CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_llama3.1_json.jinja
+```
+
+### Supported Models & Parsers
+
+#### **Llama 3.1 Models** (`llama3_json`)
+```bash
+MODEL_NAME=meta-llama/Meta-Llama-3.1-8B-Instruct
+TOOL_CALL_PARSER=llama3_json
+CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_llama3.1_json.jinja
+```
+
+**Supported Models:**
+- `meta-llama/Meta-Llama-3.1-8B-Instruct`
+- `meta-llama/Meta-Llama-3.1-70B-Instruct`  
+- `meta-llama/Meta-Llama-3.1-405B-Instruct`
+- `meta-llama/Meta-Llama-3.1-405B-Instruct-FP8`
+
+**Known Limitations:**
+- No parallel tool calls support
+- May generate parameters in wrong format occasionally
+
+#### **Hermes Models** (`hermes`)
+```bash
+MODEL_NAME=NousResearch/Hermes-2-Pro-Llama-3-8B
+TOOL_CALL_PARSER=hermes
+# Uses built-in chat template
+```
+
+**Supported Models:**
+- `NousResearch/Hermes-2-Pro-*`
+- `NousResearch/Hermes-2-Theta-*` (degraded quality)
+- `NousResearch/Hermes-3-*`
+
+#### **Mistral Models** (`mistral`)
+```bash
+MODEL_NAME=mistralai/Mistral-7B-Instruct-v0.3
+TOOL_CALL_PARSER=mistral
+CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_mistral_parallel.jinja
+```
+
+**Known Issues:**
+- Mistral 7B struggles with parallel tool calls
+- Requires custom chat template for proper tool call ID handling
+
+### Example Usage
+
+#### Python Client Example
+```python
+from openai import OpenAI
+import json
+
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="dummy")
+
+# Define your tools
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get the current weather in a given location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {"type": "string", "description": "City and state, e.g., 'San Francisco, CA'"},
+                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+            },
+            "required": ["location", "unit"]
+        }
+    }
+}]
+
+# Make request with tool calling
+response = client.chat.completions.create(
+    model="your-served-model-name",
+    messages=[{"role": "user", "content": "What's the weather like in San Francisco?"}],
+    tools=tools,
+    tool_choice="auto"  # or specify {"type": "function", "function": {"name": "get_weather"}}
+)
+
+# Handle tool calls
+if response.choices[0].message.tool_calls:
+    tool_call = response.choices[0].message.tool_calls[0].function
+    print(f"Function called: {tool_call.name}")
+    print(f"Arguments: {tool_call.arguments}")
+```
+
+#### cURL Example
+```bash
+curl http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "your-served-model-name",
+    "messages": [{"role": "user", "content": "What is 2+2?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "calculate",
+        "description": "Perform basic math calculations",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "expression": {"type": "string", "description": "Math expression to evaluate"}
+          },
+          "required": ["expression"]
+        }
+      }
+    }],
+    "tool_choice": "auto"
+  }'
+```
+
+### Tool Calling Types
+
+#### **Automatic Tool Choice** (Recommended)
+- Model decides when to use tools based on context
+- Requires `--enable-auto-tool-choice` flag
+- Works with supported model parsers
+
+#### **Named Function Calling**
+- Force specific tool usage
+- Uses guided decoding (slower first time, cached after)
+- Works with any supported model
+- Set `tool_choice={"type": "function", "function": {"name": "tool_name"}}`
+
+### Advanced Configuration
+
+#### Custom Chat Templates
+```bash
+# For models without built-in tool calling templates
+CUSTOM_CHAT_TEMPLATE=/path/to/your/custom-template.jinja
+
+# Use model's built-in tool template (if available)
+CUSTOM_CHAT_TEMPLATE=tool_use
+```
+
+#### Performance Tuning
+```bash
+# Enable for better tool calling performance
+ADDITIONAL_ARGS=--enable-chunked-prefill --max-num-batched-tokens 4096
+
+# Adjust for tool calling workloads
+MAX_NUM_SEQS=512
+MAX_MODEL_LEN=8192
+```
+
+### Troubleshooting Tool Calls
+
+```bash
+# Check if tool calling is enabled
+docker-compose logs vllm-server | grep -i "tool"
+
+# Test basic tool calling
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "your-model", "messages": [{"role": "user", "content": "Use a tool to help me"}], "tools": [...], "tool_choice": "auto"}'
+
+# Verify model supports tool calling
+docker-compose exec vllm-server python -c "
+import vllm
+print('Tool calling support available')
+"
+```
+
+**Common Issues:**
+- **No tool calls generated**: Check if model supports your parser type
+- **Invalid JSON in tool calls**: Try different `TOOL_CALL_PARSER` 
+- **Template errors**: Verify `CUSTOM_CHAT_TEMPLATE` path and format
+- **Slow first tool call**: Normal for guided decoding (cached afterward)
 
 ## 🤝 Contributing
 

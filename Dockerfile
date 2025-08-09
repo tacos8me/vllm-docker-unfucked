@@ -103,4 +103,5 @@ USER vllm
 CMD ["python", "-m", "vllm.entrypoints.openai.api_server", \
      "--host", "0.0.0.0", \
      "--port", "8080", \
-     "--model", "/workspace/models"]
+     "--model", "/workspace/models", \
+     "--chat-template-content-format", "openai"]
