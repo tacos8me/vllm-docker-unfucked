@@ -104,11 +104,11 @@ services:
       - '--web.enable-lifecycle'
       - '--storage.tsdb.retention.time=30d'
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - vllm-network
 
@@ -124,20 +124,30 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-piechart-panel,grafana-lokiexplore-app,grafana-exploretraces-app,grafana-pyroscope-app,grafana-metricsdrilldown-app
       - GF_LOG_LEVEL=warn
-      - GF_PROVISIONING_DATASOURCES_TIMEOUT=30s
+      - GF_INSTALL_PLUGINS=
+      - GF_PLUGIN_ADMIN_ENABLED=false
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
     depends_on:
-      prometheus:
-        condition: service_healthy
+      - prometheus
+    command: >
+      sh -c "
+        echo 'Waiting for Prometheus to be ready...' &&
+        until wget --spider --quiet http://prometheus:9090/-/ready 2>/dev/null; do
+          echo 'Prometheus not ready, waiting 5 seconds...'
+          sleep 5
+        done &&
+        echo 'Prometheus is ready! Starting Grafana...' &&
+        /run.sh
+      "
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - vllm-network
 
