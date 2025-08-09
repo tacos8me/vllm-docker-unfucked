@@ -27,8 +27,8 @@ Edit `.env` file with your actual paths (don't just copy-paste like an idiot):
 
 ```bash
 # CHANGE THESE OR IT WON'T WORK:
-MODELS_PATH=/actual/models/path      # Where your models live. hf-cli sucks, BYOM
-MODEL_NAME=glm-air                   # Local model name or HF model ID
+MODELS_PATH=/actual/models/path      # Root folder where your models live. hf-cli sucks, byom
+MODEL_NAME=glm-air                   # Local model / model directory
 SERVED_MODEL_NAME=oai/glm            # OpenAI-compatible model name
 VLLM_PORT=8080                       # Port to expose
 TENSOR_PARALLEL_SIZE=1               # Number of GPUs (1 unless you're rich)
