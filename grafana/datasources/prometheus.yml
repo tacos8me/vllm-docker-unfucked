@@ -5,8 +5,13 @@ datasources:
     type: prometheus
     uid: prometheus
     access: proxy
+    orgId: 1
     url: http://prometheus:9090
+    basicAuth: false
     isDefault: true
-    editable: true
+    version: 1
+    editable: false
     jsonData:
       httpMethod: GET
+      queryTimeout: 60s
+      timeInterval: 15s
