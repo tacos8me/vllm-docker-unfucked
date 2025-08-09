@@ -10,9 +10,8 @@ datasources:
     basicAuth: false
     isDefault: true
     version: 1
-    editable: true
+    editable: false
     jsonData:
       httpMethod: GET
       queryTimeout: 60s
       timeInterval: 15s
-    secureJsonData: {}
