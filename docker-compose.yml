@@ -82,9 +82,7 @@ services:
       --dtype ${DTYPE:-auto}
       --trust-remote-code
       --chat-template-content-format ${CHAT_TEMPLATE_CONTENT_FORMAT:-openai}
-      ${ENABLE_AUTO_TOOL_CHOICE:+--enable-auto-tool-choice}
-      ${TOOL_CALL_PARSER:+--tool-call-parser ${TOOL_CALL_PARSER}}
-      ${CUSTOM_CHAT_TEMPLATE:+--chat-template ${CUSTOM_CHAT_TEMPLATE}}
+      ${TOOL_CALLING_ARGS:-}
       ${ADDITIONAL_ARGS:-}
     
     networks:

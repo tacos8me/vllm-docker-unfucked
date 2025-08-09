@@ -424,16 +424,14 @@ vLLM supports OpenAI-compatible tool calling (function calling) with both automa
 Enable tool calling in your `.env` file:
 
 ```bash
-# Enable automatic tool choice (model decides when to use tools)
-ENABLE_AUTO_TOOL_CHOICE=true
+# Method 1: Use the pre-configured TOOL_CALLING_ARGS (recommended)
+TOOL_CALLING_ARGS=--enable-auto-tool-choice --tool-call-parser llama3_json
 
-# Choose parser based on your model (see supported models below)
-TOOL_CALL_PARSER=llama3_json          # For Llama 3.1 models
-# TOOL_CALL_PARSER=hermes             # For Hermes models  
-# TOOL_CALL_PARSER=mistral            # For Mistral models
+# Method 2: Add to ADDITIONAL_ARGS for more control
+ADDITIONAL_ARGS=--enable-auto-tool-choice --tool-call-parser llama3_json --chat-template examples/tool_chat_template_llama3.1_json.jinja
 
-# Optional: Custom chat template for tool calling
-CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_llama3.1_json.jinja
+# Disable tool calling (comment out or set to empty)
+# TOOL_CALLING_ARGS=
 ```
 
 ### Supported Models & Parsers
