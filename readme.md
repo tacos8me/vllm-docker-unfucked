@@ -436,45 +436,26 @@ ADDITIONAL_ARGS=--enable-auto-tool-choice --tool-call-parser llama3_json --chat-
 
 ### Supported Models & Parsers
 
-#### **Llama 3.1 Models** (`llama3_json`)
+For the complete list of supported models, parsers, and model-specific configurations, see the official vLLM documentation:
+
+**📖 [vLLM Tool Calling Documentation](https://docs.vllm.ai/en/v0.7.3/features/tool_calling.html)**
+
+Common parser options include:
+- `llama3_json` - For Llama 3.1 models
+- `hermes` - For Hermes models  
+- `mistral` - For Mistral models
+
+Example configurations:
 ```bash
-MODEL_NAME=meta-llama/Meta-Llama-3.1-8B-Instruct
-TOOL_CALL_PARSER=llama3_json
-CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_llama3.1_json.jinja
+# Llama 3.1 models
+TOOL_CALLING_ARGS=--enable-auto-tool-choice --tool-call-parser llama3_json
+
+# Hermes models
+TOOL_CALLING_ARGS=--enable-auto-tool-choice --tool-call-parser hermes
+
+# Mistral models (may need custom chat template)
+TOOL_CALLING_ARGS=--enable-auto-tool-choice --tool-call-parser mistral --chat-template examples/tool_chat_template_mistral_parallel.jinja
 ```
-
-**Supported Models:**
-- `meta-llama/Meta-Llama-3.1-8B-Instruct`
-- `meta-llama/Meta-Llama-3.1-70B-Instruct`  
-- `meta-llama/Meta-Llama-3.1-405B-Instruct`
-- `meta-llama/Meta-Llama-3.1-405B-Instruct-FP8`
-
-**Known Limitations:**
-- No parallel tool calls support
-- May generate parameters in wrong format occasionally
-
-#### **Hermes Models** (`hermes`)
-```bash
-MODEL_NAME=NousResearch/Hermes-2-Pro-Llama-3-8B
-TOOL_CALL_PARSER=hermes
-# Uses built-in chat template
-```
-
-**Supported Models:**
-- `NousResearch/Hermes-2-Pro-*`
-- `NousResearch/Hermes-2-Theta-*` (degraded quality)
-- `NousResearch/Hermes-3-*`
-
-#### **Mistral Models** (`mistral`)
-```bash
-MODEL_NAME=mistralai/Mistral-7B-Instruct-v0.3
-TOOL_CALL_PARSER=mistral
-CUSTOM_CHAT_TEMPLATE=examples/tool_chat_template_mistral_parallel.jinja
-```
-
-**Known Issues:**
-- Mistral 7B struggles with parallel tool calls
-- Requires custom chat template for proper tool call ID handling
 
 ### Example Usage
 
