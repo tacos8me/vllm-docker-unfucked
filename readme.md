@@ -28,9 +28,13 @@ Edit `.env` file with your actual paths (don't just copy-paste like a noob):
 ```bash
 # CHANGE THESE OR IT WON'T WORK:
 MODELS_PATH=/your/actual/models/path  # Where your models live
-MODEL_NAME=zai-org/GLM-4.5-Air  # What model to serve
-VLLM_PORT=8080                        # Port to expose
-TENSOR_PARALLEL_SIZE=1                # Number of GPUs (1 unless you're rich)
+MODEL_NAME=glm-air                   # Local model name or HF model ID
+SERVED_MODEL_NAME=oai/glm            # OpenAI-compatible model name
+VLLM_PORT=8080                       # Port to expose
+TENSOR_PARALLEL_SIZE=1               # Number of GPUs (1 unless you're rich)
+MAX_MODEL_LEN=65536                  # Context length (65K for long conversations)
+MAX_NUM_SEQS=2048                    # Parallel sequences (adjust for your GPU)
+GPU_MEMORY_UTIL=0.95                 # Use 95% of GPU memory
 ```
 
 ### 3. Build and Start (The Moment of Truth)
@@ -50,14 +54,19 @@ docker-compose logs -f vllm-server
 # Health check
 curl http://localhost:8080/health
 
-# Chat completion
+# Chat completion (use your SERVED_MODEL_NAME)
 curl http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "your-model-name",
+    "model": "oai/glm",
     "messages": [{"role": "user", "content": "Hello!"}],
     "max_tokens": 100
   }'
+
+# Check monitoring dashboards
+open http://localhost:3000  # Grafana (admin/admin123)
+open http://localhost:9090  # Prometheus
+open http://localhost:8081/metrics  # vLLM metrics
 ```
 
 ## 🔥 What This Unfucks
@@ -75,7 +84,10 @@ curl http://localhost:8080/v1/chat/completions \
 - ✅ **CUDA 12.9 + PyTorch compatibility** - They actually talk to each other
 - ✅ **Automated everything** - Docker Compose handles the bullshit
 - ✅ **Multi-GPU ready** - Just change one number in .env
-- ✅ **Production ready** - Health checks, logging, monitoring (optional)
+- ✅ **Production ready** - Health checks, logging, monitoring stack included
+- ✅ **Advanced performance tuning** - Prefix caching, chunked prefill, optimized batching
+- ✅ **Full monitoring stack** - Prometheus + Grafana dashboards out of the box
+- ✅ **Configurable build settings** - Tune compilation for your hardware
 
 ## 💻 Supported Hardware
 
@@ -108,19 +120,34 @@ MODEL_NAME=meta-llama/Llama-2-7b-chat-hf
 TENSOR_PARALLEL_SIZE=2
 CUDA_VISIBLE_DEVICES=0,1
 
-# Increase shared memory
+# Increase shared memory and container limits
 SHM_SIZE=32g
+MEM_LIMIT=256g
+
+# Build optimization for multi-GPU
+MAX_JOBS=32
+NVCC_THREADS=16
 ```
 
 ### Performance Tuning
 ```bash
-# High throughput
-MAX_NUM_SEQS=512
-GPU_MEMORY_UTIL=0.98
+# High throughput setup
+MAX_NUM_SEQS=2048
+MAX_MODEL_LEN=65536
+GPU_MEMORY_UTIL=0.95
+ENABLE_PREFIX_CACHING=true
+ADDITIONAL_ARGS=--enable-chunked-prefill --max-num-batched-tokens 8192
 
-# Low latency
-MAX_NUM_SEQS=64
-GPU_MEMORY_UTIL=0.85
+# Low latency setup
+MAX_NUM_SEQS=256
+MAX_MODEL_LEN=8192
+GPU_MEMORY_UTIL=0.90
+BLOCK_SIZE=16
+
+# Memory optimization
+KV_CACHE_DTYPE=auto
+QUANTIZATION=none
+SWAP_SPACE=4
 ```
 
 ## 🛠️ Management Commands
@@ -259,24 +286,59 @@ SHM_SIZE=64g
 
 ### High Throughput Setup
 ```bash
-# More parallel sequences = higher throughput
-MAX_NUM_SEQS=512
+# Maximum parallel sequences for throughput
+MAX_NUM_SEQS=2048
 
-# Longer sequences for complex tasks
-MAX_MODEL_LEN=8192
+# Long context for complex tasks
+MAX_MODEL_LEN=65536
+
+# Advanced performance features
+ENABLE_PREFIX_CACHING=true
+ADDITIONAL_ARGS=--enable-chunked-prefill --max-num-batched-tokens 8192 --enable-prefix-caching
+
+# Build optimization
+MAX_JOBS=32
+NVCC_THREADS=16
+
+# Memory optimization
+KV_CACHE_DTYPE=auto
+SWAP_SPACE=4
+MAX_PARALLEL_LOADING_WORKERS=4
 ```
 
-## 📊 Monitoring (Optional Nerd Stuff)
+## 📊 Monitoring Stack (Enabled by Default)
 
-Want fancy dashboards? Uncomment the monitoring services in `docker-compose.yml`:
+We've included a full monitoring stack with Prometheus and Grafana:
 
 ```bash
-# Start everything including monitoring
+# Start everything (monitoring included)
 docker-compose up -d
 
-# Access the goods
-open http://localhost:9090  # Prometheus metrics
+# Access the monitoring stack
 open http://localhost:3000  # Grafana dashboards (admin/admin123)
+open http://localhost:9090  # Prometheus metrics
+open http://localhost:8081/metrics  # Raw vLLM metrics
+```
+
+### What You Get:
+- **Real-time performance metrics** - Request latency, throughput, GPU utilization
+- **Memory usage tracking** - KV cache, model weights, system memory
+- **Request analytics** - Success rates, error tracking, queue depths
+- **Hardware monitoring** - GPU temperature, power consumption, CUDA errors
+- **30-day data retention** - Historical performance analysis
+
+### Monitoring Configuration:
+```bash
+# Disable monitoring (if you're boring)
+ENABLE_MONITORING=false
+
+# Custom ports
+GRAFANA_PORT=3000
+PROMETHEUS_PORT=9090
+METRICS_PORT=8081
+
+# Grafana admin password
+GRAFANA_PASSWORD=admin123
 ```
 
 ## 🤝 Contributing
@@ -289,12 +351,15 @@ Found a bug? Setup doesn't work? Have a better way to do something?
 
 ## 📝 Example Model Configs
 
-### For Chat/Conversation
+### For Chat/Conversation (GLM-4.5-Air)
 ```bash
-MODEL_NAME=microsoft/DialoGPT-medium
-MAX_MODEL_LEN=2048
-MAX_NUM_SEQS=128
-DTYPE=bfloat16
+MODEL_NAME=glm-air
+SERVED_MODEL_NAME=oai/glm
+MAX_MODEL_LEN=65536
+MAX_NUM_SEQS=1024
+DTYPE=auto
+ENABLE_PREFIX_CACHING=true
+ADDITIONAL_ARGS=--enable-chunked-prefill --max-num-batched-tokens 8192
 ```
 
 ### For Code Generation  
@@ -310,8 +375,13 @@ DTYPE=bfloat16
 MODEL_NAME=meta-llama/Llama-2-70b-chat-hf
 TENSOR_PARALLEL_SIZE=2
 SHM_SIZE=32g
-MEM_LIMIT=128g
-DTYPE=bfloat16
+MEM_LIMIT=256g
+DTYPE=auto
+MAX_MODEL_LEN=32768
+MAX_NUM_SEQS=512
+GPU_MEMORY_UTIL=0.95
+QUANTIZATION=none
+ENABLE_PREFIX_CACHING=true
 ```
 
 ## ⚠️ Known Issues
