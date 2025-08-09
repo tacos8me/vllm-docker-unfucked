@@ -69,45 +69,6 @@ open http://localhost:9090  # Prometheus
 open http://localhost:8081/metrics  # vLLM metrics
 ```
 
-## 🔧 Troubleshooting & Common Issues
-
-### Docker State Issues
-If you encounter errors like `'ContainerConfig'` or other Docker Compose failures:
-
-```bash
-# Clean up Docker state (fixes most issues)
-docker-compose down --remove-orphans
-
-# Full cleanup if needed
-docker-compose down --remove-orphans --volumes --rmi local
-
-# Rebuild from scratch
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### Container Management
-```bash
-# Stop everything
-docker-compose down
-
-# View logs
-docker-compose logs -f vllm-server
-
-# Get inside the container for debugging
-docker-compose exec vllm-server bash
-
-# Check container status
-docker-compose ps
-```
-
-### Common Fixes
-- **Build failures**: Try `docker-compose build --no-cache`
-- **Port conflicts**: Change `VLLM_PORT` in `.env`
-- **GPU not detected**: Ensure NVIDIA Container Runtime is installed
-- **Out of memory**: Reduce `GPU_MEMORY_UTIL` or `MAX_NUM_SEQS`
-- **Model loading errors**: Check `MODELS_PATH` and `MODEL_NAME`
-
 ## 🔥 What This Unfucks
 
 ### The Usual vLLM Docker Pain Points:
@@ -248,6 +209,30 @@ open http://localhost:3000  # Grafana (admin/admin123)
 ```
 
 ## 🐛 Troubleshooting (When Shit Breaks)
+
+### Docker State Corruption (The Most Common Bullshit)
+If you get `'ContainerConfig'` errors or other mysterious Docker Compose failures:
+
+```bash
+# Clean up Docker state (fixes most issues)
+docker-compose down --remove-orphans
+
+# Full nuclear cleanup if needed
+docker-compose down --remove-orphans --volumes --rmi local
+
+# Rebuild from scratch
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check what's actually running
+docker-compose ps
+
+# See what the hell is happening
+docker-compose logs -f vllm-server
+
+# Get inside the container for debugging
+docker-compose exec vllm-server bash
+```
 
 ### "GPU Not Detected" (Classic)
 ```bash
