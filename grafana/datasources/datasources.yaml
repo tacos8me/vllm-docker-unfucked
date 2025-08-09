@@ -16,8 +16,10 @@ datasources:
       queryTimeout: 60s
       timeInterval: 15s
       keepCookies: []
-      manageAlerts: true
+      manageAlerts: false
       alertmanagerUid: ""
       exemplarTraceIdDestinations: []
+      connectTimeout: 30
+      timeout: 60
     secureJsonFields: {}
     withCredentials: false
