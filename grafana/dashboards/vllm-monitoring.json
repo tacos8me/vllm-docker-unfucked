@@ -107,7 +107,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(vllm_request_success_total[5m])",
+          "expr": "rate(http_requests_total{status=\"2xx\"}[5m])",
           "instant": false,
           "legendFormat": "Successful Requests/sec",
           "range": true,
@@ -119,7 +119,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(vllm_request_failure_total[5m])",
+          "expr": "rate(http_requests_total{status!=\"2xx\"}[5m])",
           "hide": false,
           "instant": false,
           "legendFormat": "Failed Requests/sec",
@@ -215,9 +215,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(vllm_generation_tokens_total[5m])",
+          "expr": "rate(http_request_size_bytes_sum[5m])",
           "instant": false,
-          "legendFormat": "Generation Tokens/sec",
+          "legendFormat": "Request Bytes/sec",
           "range": true,
           "refId": "A"
         },
@@ -227,15 +227,15 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(vllm_prompt_tokens_total[5m])",
+          "expr": "rate(http_response_size_bytes_sum[5m])",
           "hide": false,
           "instant": false,
-          "legendFormat": "Prompt Tokens/sec",
+          "legendFormat": "Response Bytes/sec",
           "range": true,
           "refId": "B"
         }
       ],
-      "title": "Token Throughput",
+      "title": "Data Throughput",
       "type": "timeseries"
     },
     {
@@ -293,14 +293,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm_gpu_cache_usage_perc",
+          "expr": "process_resident_memory_bytes / 1024 / 1024 / 1024",
           "instant": false,
-          "legendFormat": "GPU Cache Usage %",
+          "legendFormat": "Memory Usage (GB)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GPU Cache Usage",
+      "title": "Memory Usage (GB)",
       "type": "gauge"
     },
     {
@@ -364,14 +364,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm_num_requests_running",
+          "expr": "rate(http_requests_total[5m]) * 60",
           "instant": false,
-          "legendFormat": "Running Requests",
+          "legendFormat": "Requests per Minute",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Active Requests",
+      "title": "Requests per Minute",
       "type": "stat"
     },
     {
@@ -435,14 +435,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm_num_requests_waiting",
+          "expr": "process_cpu_seconds_total",
           "instant": false,
-          "legendFormat": "Waiting Requests",
+          "legendFormat": "CPU Usage (seconds)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Queue Depth",
+      "title": "CPU Usage",
       "type": "stat"
     },
     {
@@ -502,14 +502,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+          "expr": "rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) * 1000",
           "instant": false,
-          "legendFormat": "95th Percentile",
+          "legendFormat": "Avg Response Time (ms)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Request Latency (P95)",
+      "title": "Avg Response Time",
       "type": "stat"
     },
     {
@@ -597,14 +597,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "vllm_gpu_cache_usage",
+          "expr": "process_virtual_memory_bytes",
           "instant": false,
-          "legendFormat": "GPU Cache Usage (Bytes)",
+          "legendFormat": "Virtual Memory (Bytes)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GPU Memory Usage",
+      "title": "Virtual Memory Usage",
       "type": "timeseries"
     },
     {
@@ -692,9 +692,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.50, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+          "expr": "rate(http_requests_total[5m])",
           "instant": false,
-          "legendFormat": "P50",
+          "legendFormat": "Request Rate",
           "range": true,
           "refId": "A"
         },
@@ -704,10 +704,10 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+          "expr": "rate(http_request_size_bytes_count[5m])",
           "hide": false,
           "instant": false,
-          "legendFormat": "P95",
+          "legendFormat": "Request Count Rate",
           "range": true,
           "refId": "B"
         },
@@ -717,15 +717,15 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.99, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+          "expr": "process_open_fds",
           "hide": false,
           "instant": false,
-          "legendFormat": "P99",
+          "legendFormat": "Open File Descriptors",
           "range": true,
           "refId": "C"
         }
       ],
-      "title": "Request Latency Distribution",
+      "title": "System Metrics",
       "type": "timeseries"
     }
   ],
