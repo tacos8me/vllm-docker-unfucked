@@ -15,9 +15,14 @@ services:
     container_name: vllm-blackwell-server
     restart: unless-stopped
     
-    # GPU access for docker-compose (non-Swarm) - widest compatibility
-    # Use legacy runtime flag plus NVIDIA_* envs; subset via CUDA_VISIBLE_DEVICES
-    runtime: nvidia
+    # GPU access for Windows Docker Desktop compatibility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     
     # Port mapping
     ports:
