@@ -61,6 +61,9 @@ services:
       # FlashInfer mxfp4 MoE optimization
       - VLLM_USE_FLASHINFER_MXFP4_BF16_MOE=${VLLM_USE_FLASHINFER_MXFP4_BF16_MOE:-1}
       - VLLM_USE_FLASHINFER_MXFP4_MOE=${VLLM_USE_FLASHINFER_MXFP4_MOE:-}
+      # Prevent multiprocessing issues and duplicate initialization
+      - VLLM_WORKER_MULTIPROC_METHOD=spawn
+      - VLLM_ENGINE_USE_RAY=0
     
     # Shared memory for multi-GPU setups
     shm_size: ${SHM_SIZE:-16g}
