@@ -46,6 +46,8 @@ services:
       - VLLM_LOGGING_LEVEL=${VLLM_LOGGING_LEVEL:-INFO}
       - HF_HOME=/root/.cache/huggingface
       - HF_HUB_ENABLE_HF_TRANSFER=1
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
       - HF_TOKEN=${HF_TOKEN:-}
       - OMP_NUM_THREADS=${OMP_NUM_THREADS:-8}
       - MKL_NUM_THREADS=${MKL_NUM_THREADS:-8}
