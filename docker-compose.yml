@@ -80,6 +80,12 @@ services:
       --max-num-seqs ${MAX_NUM_SEQS:-256}
       --gpu-memory-utilization ${GPU_MEMORY_UTIL:-0.95}
       --dtype ${DTYPE:-auto}
+      --quantization ${QUANTIZATION:-none}
+      --kv-cache-dtype ${KV_CACHE_DTYPE:-auto}
+      --enable-prefix-caching=${ENABLE_PREFIX_CACHING:-false}
+      --block-size ${BLOCK_SIZE:-16}
+      --swap-space ${SWAP_SPACE:-4}
+      --max-parallel-loading-workers ${MAX_PARALLEL_LOADING_WORKERS:-4}
       --trust-remote-code
       --chat-template-content-format ${CHAT_TEMPLATE_CONTENT_FORMAT:-openai}
       ${TOOL_CALLING_ARGS:-}
