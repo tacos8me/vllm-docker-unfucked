@@ -61,9 +61,6 @@ services:
       # FlashInfer mxfp4 MoE optimization
       - VLLM_USE_FLASHINFER_MXFP4_BF16_MOE=${VLLM_USE_FLASHINFER_MXFP4_BF16_MOE:-1}
       - VLLM_USE_FLASHINFER_MXFP4_MOE=${VLLM_USE_FLASHINFER_MXFP4_MOE:-}
-      # Prevent multiprocessing issues and duplicate initialization
-      - VLLM_WORKER_MULTIPROC_METHOD=spawn
-      - VLLM_ENGINE_USE_RAY=0
       # Blackwell GPU compatibility - use Triton attention instead of FlashAttention 3
       - VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1
     
