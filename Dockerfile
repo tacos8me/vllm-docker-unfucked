@@ -75,7 +75,8 @@ WORKDIR /opt/vllm
 # Build vLLM from source (non-editable install for faster cold start and smaller runtime deps)
 RUN python use_existing_torch.py && \
     /root/.local/bin/uv pip install -r requirements/build.txt && \
-    /root/.local/bin/uv pip install . --no-build-isolation
+    /root/.local/bin/uv pip install . --no-build-isolation && \
+    /root/.local/bin/uv pip install triton
 
 # Create models directory
 RUN mkdir -p /workspace/models

@@ -61,7 +61,7 @@ services:
       # FlashInfer mxfp4 MoE optimization
       - VLLM_USE_FLASHINFER_MXFP4_BF16_MOE=${VLLM_USE_FLASHINFER_MXFP4_BF16_MOE:-1}
       - VLLM_USE_FLASHINFER_MXFP4_MOE=${VLLM_USE_FLASHINFER_MXFP4_MOE:-}
-      # Blackwell GPU compatibility - use Triton attention instead of FlashAttention 3
+      # Blackwell GPU compatibility - use Triton attention backend
       - VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1
     
     # Shared memory for multi-GPU setups
