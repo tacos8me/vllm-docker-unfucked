@@ -98,10 +98,5 @@ RUN useradd -m -u 10001 -s /bin/bash vllm && \
     mkdir -p /workspace/models /opt/vllm/logs && \
     chown -R vllm:vllm /workspace /opt/vllm /root/.cache || true
 
-# Default command - can be overridden in docker-compose
+# Default command - overridden by docker-compose
 USER vllm
-CMD ["python", "-m", "vllm.entrypoints.openai.api_server", \
-     "--host", "0.0.0.0", \
-     "--port", "8080", \
-     "--model", "/workspace/models", \
-     "--chat-template-content-format", "openai"]
