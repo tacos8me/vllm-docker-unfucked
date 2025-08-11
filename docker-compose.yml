@@ -68,7 +68,7 @@ services:
       retries: 3
       start_period: 120s
     
-    # Default command - serve a model
+    # Default command - install triton and serve model
     command: >
       bash -c "/root/.local/bin/uv pip install triton && python -m vllm.entrypoints.openai.api_server
       --model ${MODEL_NAME:-/workspace/models}
@@ -83,7 +83,7 @@ services:
       --trust-remote-code
       --chat-template-content-format ${CHAT_TEMPLATE_CONTENT_FORMAT:-openai}
       ${TOOL_CALLING_ARGS:-}
-      ${ADDITIONAL_ARGS:-}
+      ${ADDITIONAL_ARGS:-}"
     
     networks:
       - vllm-network
